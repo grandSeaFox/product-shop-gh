@@ -2,7 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const HomePageSkeleton = () => {
     return (
-        <div className="py-8">
+        <div className="py-8" data-testid="home-page-skeleton">
             <section className="my-12 flex items-center justify-center flex-col">
                 <div className="p-3 rounded">
                     <Skeleton className="w-[600px] h-[600px] rounded-3xl" />

@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { Product } from '@/lib/types/product';
 import Image from 'next/image';
 import ProductDetailsSkeleton from '@/components/skeletons/ProductDetailsSkeleton';
-import { Button } from '@/components/ui/button';
+import { AddToCartButton } from '@/components/ButtonAddToCart';
 
 export default function ProductDetailsPage({ params }: { params: { id: string } }) {
   const { products, isLoading: contextLoading, error } = useProducts();
@@ -51,15 +51,10 @@ export default function ProductDetailsPage({ params }: { params: { id: string } 
             <h2 className="text-lg font-semibold mb-2">Description</h2>
             <p className="text-sm text-gray-500 mb-4">{product.description}</p>
             <h3 className="text-lg font-semibold mb-2">Category</h3>
-            <p className="text-sm text-gray-500">Name: {product.category.name}</p>
-            <p className="text-sm text-gray-500">Order: {product.category.order}</p>
+            <p className="text-sm text-gray-500">{product.category.name}</p>
           </div>
         </div>
-
-        <div className="flex space-x-4">
-          <Button className="py-2 px-4 w-1/3" variant="outline" >Add to Cart</Button>
-          <Button className="py-2 px-4 w-1/3" variant="default">Buy Now</Button>
-        </div>
+        <AddToCartButton product={product}/>
       </div>
     </div>
   );

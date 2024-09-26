@@ -5,16 +5,15 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProducts } from '@/lib/providers/ProductsProvider';
 import { useState } from 'react';
 import ProductPageSkeleton from '@/components/skeletons/ProductPageSkeleton';
-import { Button } from '@/components/ui/button';
-import { useCart } from '@/lib/providers/CartProvider';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Product } from '@/lib/types/product';
+import { AddToCartButton } from '@/components/ButtonAddToCart';
+import { useToast } from '@/lib/hooks/use-toast';
 
 export default function ProductsPage() {
     const { groupedProducts, isLoading, error } = useProducts();
-    const { addToCart, cart } = useCart();
     const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+    const toast = useToast()
 
     if (isLoading) {
         return (
@@ -22,7 +21,11 @@ export default function ProductsPage() {
         );
     }
 
-    if (error) return <div>Error: {error}</div>;
+    if(error) {
+        toast.toast({variant: 'destructive', title: 'An error has occured'})
+
+        return <div>{error}</div>
+    }
 
 
     // instead of loading everything I would add pagination in all of these
@@ -32,12 +35,6 @@ export default function ProductsPage() {
     const filteredCategories = selectedCategory
         ? [selectedCategory]
         : categories;
-
-
-    const handleProductAddToCartClick = (e: React.FormEvent<HTMLButtonElement>, product: Product) => {
-        e.preventDefault()
-        addToCart(product)
-    }
 
     return (
         <div className="container mx-auto p-4">
@@ -80,14 +77,7 @@ export default function ProductsPage() {
                                     </CardHeader>
                                     <CardContent>
                                         <p className="text-sm text-gray-500">Price: ${product.price}</p>
-
-                                        <Button
-                                            onClick={(e) => handleProductAddToCartClick(e, product)}
-                                            className="mt-2 w-full"
-                                            disabled={cart.some(item => item.id === product.id)}
-                                        >
-                                            {cart.some(item => item.id === product.id) ? 'In Cart' : 'Add to Cart'}
-                                        </Button>
+                                        <AddToCartButton product={product}/>
                                     </CardContent>
                                 </Card>
                             </Link>

@@ -2,6 +2,7 @@
 
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { Product } from '../types/product';
+import { completeOrder, createOrder, getOrderById, updateOrder } from '@/lib/actions/api';
 
 type CartItem = Product & { quantity: number };
 
@@ -12,63 +13,181 @@ type CartContextType = {
     updateQuantity: (productId: number, quantity: number) => void;
     clearCart: () => void;
     getCartTotal: () => number;
+    completePurchase: () => void;
+    openCart: () => void;
+    closeCart: () => void;
     totalItemsInCart: number;
+    isCartOpen: boolean;
+    error: string | null;
 };
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
+/*
+*
+* Done
+* whenever we add our first thing to the cart we must create an order XX - wont work because we cannot update the server order with new products
+* save the returned created order into local storage (that will be our basket number) O
+* whenever we add more products into the order we must update the basket X - wont work, only when the cart is open should we create a new order
+* after we proceed with buying we must clear the local storage for the basket
+*
+* */
+
+
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [cart, setCart] = useState<CartItem[]>([]);
     const [totalItemsInCart, setTotalItemsInCart] = useState<number>(0);
+    const [orderId, setOrderId] = useState<number | null>(null);
+    const [isCartOpen, setIsCartOpen] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
-        setTotalItemsInCart(cart.length)
-    }, [cart.length])
+        setTotalItemsInCart(cart.length);
+    }, [cart.length]);
+
+    // This will check if there is already a basket/order created and if there is we will automatically set the products in the basket
+    useEffect(() => {
+        const loadOrder = async () => {
+            const storedOrderId = localStorage.getItem('orderId');
+            if (storedOrderId) {
+                try {
+                    const order = await getOrderById(parseInt(storedOrderId));
+                    setOrderId(order.id);
+                    setCart(order.products.map((p) => ({ ...p.product, quantity: p.quantity })));
+                } catch (err) {
+                    setError('Failed to load existing order');
+                }
+            }
+        };
+
+        loadOrder();
+    }, []);
+
+
+    const openCart
+      = async () => {
+        if (!orderId) {
+            try {
+                const orderData = await createOrder(cart.map(item => ({ id: item.id, quantity: item.quantity })));
+                setOrderId(orderData.id);
+                localStorage.setItem('orderId', orderData.id);
+            } catch (err) {
+                setError('Error loading existing order');
+            }
+        } else {
+            const storedOrderId = localStorage.getItem('orderId');
+            if (storedOrderId) {
+                try {
+                    const order = await getOrderById(parseInt(storedOrderId));
+                    setOrderId(order.id);
+                    setCart(order.products.map((p) => ({ ...p.product, quantity: p.quantity })));
+                } catch (err) {
+                    setError('Error loading existing order');
+                }
+            }
+        }
+        setIsCartOpen(true);
+    };
+
+    const closeCart = () => {
+        clearCart();
+        setIsCartOpen(false);
+        localStorage.removeItem('orderId');
+    };
 
     const addToCart = (product: Product) => {
-        setCart(prevCart => {
-            const existingItem = prevCart.find(item => item.id === product.id);
-            if (existingItem) {
-                return prevCart.map(item =>
-                    item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
-                );
+        const existingItem = cart.find(item => item.id === product.id);
+        let updatedCart;
+
+        if (existingItem) {
+            updatedCart = cart.map(item =>
+              item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item
+            );
+        } else {
+            updatedCart = [...cart, { ...product, quantity: 1 }];
+        }
+
+        setCart(updatedCart);
+    };
+
+    const removeFromCart = async (productId: number) => {
+        const updatedCart = cart.filter(item => item.id !== productId);
+        setCart(updatedCart);
+
+        if (isCartOpen && orderId) {
+            try {
+                await updateOrder(orderId, productId, 0);
+            } catch (err) {
+                setError('Error removing item from order');
             }
-            return [...prevCart, { ...product, quantity: 1 }];
+        }
+    };
+
+    const updateQuantity = async (productId: number, quantity: number) => {
+        const updatedCart = cart.map(item => {
+            if (item.id === productId) {
+                const newQuantity = Math.max(0, item.quantity + quantity);
+                return { ...item, quantity: newQuantity };
+            }
+            return item;
         });
+
+        setCart(updatedCart);
+
+        const updatedItem = updatedCart.find(item => item.id === productId);
+
+        if (updatedItem) {
+            if (updatedItem.quantity === 0) {
+                await removeFromCart(productId);
+            } else if (orderId && isCartOpen) {
+                const result = await updateOrder(orderId, productId, updatedItem.quantity);
+                if (result.error) {
+                    setError(result.error.message);
+                }
+            }
+        }
     };
 
-    const removeFromCart = (productId: number) => {
-        setCart(prevCart => prevCart.filter(item => item.id !== productId));
-    };
-
-    const updateQuantity = (productId: number, quantity: number) => {
-        setCart(prevCart =>
-            prevCart.map(item =>
-                item.id === productId ? { ...item, quantity: Math.max(0, quantity) } : item
-            ).filter(item => item.quantity > 0)
-        );
-    };
 
     const clearCart = () => {
         setCart([]);
+        localStorage.removeItem('orderId');
+        setOrderId(null);
     };
 
     const getCartTotal = () => {
         return cart.reduce((total, item) => total + item.price * item.quantity, 0);
     };
 
+    const completePurchase = async () => {
+        if (!orderId) return;
+
+        try {
+            await completeOrder(orderId);
+            clearCart();
+            setOrderId(null);
+        } catch (err) {
+            setError('Error completing purchase');
+        }
+    };
+
     return (
-        <CartContext.Provider value={{
-            cart,
-            addToCart,
-            removeFromCart,
-            updateQuantity,
-            clearCart,
-            getCartTotal,
-            totalItemsInCart
-        }}>
-            {children}
-        </CartContext.Provider>
+      <CartContext.Provider value={{
+          cart,
+          addToCart,
+          removeFromCart,
+          updateQuantity,
+          clearCart,
+          getCartTotal,
+          completePurchase,
+          openCart,
+          closeCart,
+          totalItemsInCart,
+          isCartOpen,
+          error,
+      }}>
+          {children}
+      </CartContext.Provider>
     );
 };
 

@@ -5,10 +5,16 @@ import { Minus, Plus, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import useIsMobile from '@/lib/hooks/useIsMobile';
 import { useCart } from '@/lib/providers/CartProvider';
+import CompleteOrderButton from '@/components/ButtonCompleteOrder';
+import { toast } from '@/lib/hooks/use-toast';
 
-const Cart = () => {
-    const { cart, removeFromCart, updateQuantity, getCartTotal } = useCart();
+const Cart = ({onCompletePurchase} : {onCompletePurchase?: () => void}) => {
+    const { cart, removeFromCart, updateQuantity, getCartTotal, error, isCartOpen, openCart} = useCart();
     const isMobile = useIsMobile();
+
+    if(error) toast({variant: 'destructive', title: error})
+
+    if(!isCartOpen) openCart();
 
     return (
         <div className="p-4 h-full">
@@ -25,19 +31,19 @@ const Cart = () => {
                                         <span className="font-medium">{item.name}</span>
                                         <div className="flex items-center mt-1">
                                             <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => updateQuantity(item.id, 1)}
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => updateQuantity(item.id, -1)}
                                             >
-                                                <Plus className="h-4 w-4" />
+                                                <Minus className="h-4 w-4" />
                                             </Button>
                                             <span className="mx-2 px-2">{item.quantity}</span>
                                             <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => updateQuantity(item.id, -1)}
+                                              variant="outline"
+                                              size="sm"
+                                              onClick={() => updateQuantity(item.id, 1)}
                                             >
-                                                <Minus className="h-4 w-4" />
+                                                <Plus className="h-4 w-4" />
                                             </Button>
                                         </div>
                                     </div>
@@ -60,7 +66,7 @@ const Cart = () => {
                         <span className="font-bold">Total:</span>
                         <span className="font-bold">${getCartTotal()}</span>
                     </div>
-                    <Button className="w-full mt-4 mb-6">Checkout</Button>
+                    <CompleteOrderButton onCompletePurchase={onCompletePurchase}/>
                 </div>
             )}
         </div>

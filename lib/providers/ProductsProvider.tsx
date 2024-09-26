@@ -19,6 +19,7 @@ export const ProductsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
+
     useEffect(() => {
         const fetchProducts = async () => {
             try {

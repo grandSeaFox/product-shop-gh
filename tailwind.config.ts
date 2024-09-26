@@ -35,6 +35,10 @@ module.exports = {
           DEFAULT: '#e6e4e1',
           foreground: '#666666',
         },
+        destructive: {
+          DEFAULT: '#d26f6f',
+          foreground: '#000000',
+        },
       },
       boxShadow: {
         form: '0px 1px 2px 0px rgba(16, 24, 40, 0.05)',

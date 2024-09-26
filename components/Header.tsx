@@ -6,7 +6,7 @@ import CartButton from '@/components/CartButton';
 
 const Header = () => {
     return (
-        <header className="bg-background h-28 py-8 top-0 fixed w-full z-50">
+        <header className="bg-background h-28 py-8 top-0 fixed w-full z-10">
             <div className="container px-1 flex relative h-full">
                 <div className="absolute left-1/2 -translate-x-1/2">
                     <nav className="gap-1 flex flex-col text-center ">

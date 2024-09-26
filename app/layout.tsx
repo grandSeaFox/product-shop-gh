@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import { ProductsProvider } from '@/lib/providers/ProductsProvider';
 import Footer from '@/components/Footer';
 import { CartProvider } from '@/lib/providers/CartProvider';
+import { Toaster } from '@/components/ui/toaster';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const ibmPlexSerif = IBM_Plex_Serif({
@@ -18,16 +19,16 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <html lang="en">
       <body className={`${inter.variable} ${ibmPlexSerif.variable} flex flex-col min-h-screen`}>
-        <CartProvider>
-          <Header />
-          <ProductsProvider>
-
-            <main className="flex-grow">
-              {children}
-            </main>
-          </ProductsProvider>
-        </CartProvider>
-        <Footer />
+          <CartProvider>
+            <Header />
+            <ProductsProvider>
+              <main className="flex-grow pt-14">
+                {children}
+              </main>
+            </ProductsProvider>
+          </CartProvider>
+          <Footer />
+          <Toaster />
       </body>
     </html>
   );

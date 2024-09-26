@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <main className="flex flex-col w-full h-full font-inter">
+    <main className="flex flex-col w-full h-full font-inter pt-14">
       {children}
     </main>
   );
