@@ -15,10 +15,9 @@ const CartButton = () => {
   const router = useRouter();
 
   const handleCartClick = () => {
+    openCart();
     if (isMobile) {
       router.push('/cart');
-    } else {
-      openCart();
     }
   };
 

@@ -9,12 +9,10 @@ import CompleteOrderButton from '@/components/ButtonCompleteOrder';
 import { toast } from '@/lib/hooks/use-toast';
 
 const Cart = ({onCompletePurchase} : {onCompletePurchase?: () => void}) => {
-    const { cart, removeFromCart, updateQuantity, getCartTotal, error, isCartOpen, openCart} = useCart();
+    const { cart, removeFromCart, updateQuantity, getCartTotal, error} = useCart();
     const isMobile = useIsMobile();
 
     if(error) toast({variant: 'destructive', title: error})
-
-    if(!isCartOpen) openCart();
 
     return (
         <div className="p-4 h-full">
