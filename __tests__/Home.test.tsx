@@ -6,7 +6,7 @@ import { useProducts } from '@/lib/providers/ProductsProvider';
 import { toast } from '@/lib/hooks/use-toast';
 
 jest.mock('@/lib/providers/ProductsProvider');
-jest.mock('@/hooks/use-toast');
+jest.mock('@/lib/hooks/use-toast');
 jest.mock('@/components/ProductCarousel', () => {
   return function MockProductCarousel() {
     return <div data-testid="product-carousel">Product Carousel</div>;
@@ -15,7 +15,7 @@ jest.mock('@/components/ProductCarousel', () => {
 jest.mock('next/image', () => ({
   __esModule: true,
   default: (props: any) => { // should try to understand why jest does not work well with Image
-    return <img {...props}  alt={props.name}/>;
+    return <img {...props}/>;
   },
 }));
 
