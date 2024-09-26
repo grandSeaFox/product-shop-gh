@@ -1,7 +1,8 @@
 {
-  "name": "sfe-exercise-client",
+  "name": "gh-shop-fe-exercise",
   "version": "0.1.0",
   "private": true,
+  "author": "grandFox",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
