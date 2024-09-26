@@ -70,7 +70,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
                 const orderData = await createOrder(cart.map(item => ({ id: item.id, quantity: item.quantity })));
                 setOrderId(orderData.id);
-                localStorage.setItem('orderId', orderData.id);
+                localStorage.setItem('orderId', String(orderData.id));
             } catch (err) {
                 setError('Error loading existing order');
             }
@@ -140,9 +140,10 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
             if (updatedItem.quantity === 0) {
                 await removeFromCart(productId);
             } else if (orderId && isCartOpen) {
-                const result = await updateOrder(orderId, productId, updatedItem.quantity);
-                if (result.error) {
-                    setError(result.error.message);
+                try {
+                    await updateOrder(orderId, productId, updatedItem.quantity);
+                } catch (err: any) {
+                    setError(err.message);
                 }
             }
         }
