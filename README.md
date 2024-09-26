@@ -50,5 +50,4 @@ pnpm e2e
 
 ### MSW
 
-[MSW](https://mswjs.io/) is available if needed for mocks during tests. To run the app using the mocks set `NEXT_PUBLIC_API_MOCKING=enabled`
-# product-shop-gh
+[MSW](https://mswjs.io/) is available if needed for mocks during tests. To run the app using the mocks set
