@@ -4,69 +4,59 @@ import { BASE_API_URL } from '../consts';
 import { Category } from '../types/categories';
 import { Product } from '../types/product';
 import { Order } from '@/lib/types/order';
-import { NextError } from 'next/dist/lib/is-error';
 
-export async function getProducts(): Promise<Array<Product>> {
-    const response = await fetch(`${BASE_API_URL}/products?norandom`);
-    if(!response.ok) throw new Error('Failed to fetch categories');
-    return await response.json();
-}
-
-export async function getCategories(): Promise<Array<Category> | NextError> {
-    const response = await fetch(`${BASE_API_URL}/categories?norandom`);
-    if (!response.ok) throw new Error('Failed to fetch categories');
-    return await response.json();
-}
-
-export const getOrderById = async (orderId: number): Promise<Order> => {
-  const response = await fetch(`${BASE_API_URL}/orders/${orderId}`);
-
+async function handleResponse<T>(response: Response, errorMessage: string): Promise<T> {
   if (!response.ok) {
-    throw new Error('Failed to fetch order');
+    const errorText = await response.text();
+    console.error(`${errorMessage}:`, errorText);
+    throw new Error(`${errorMessage}: ${response.status} ${response.statusText}`);
   }
 
-  return await response.json();
-};
+  try {
+    return await response.json();
+  } catch (error) {
+    console.error('Failed to parse JSON response:', error);
+    throw new Error('Invalid JSON in server response');
+  }
+}
 
-export const createOrder = async (products: { id: number, quantity: number }[]) => {
+export async function getProducts(): Promise<Array<Product>> {
+  const response = await fetch(`${BASE_API_URL}/products?norandom`, { next: { revalidate: 3600 } });
+  return handleResponse<Array<Product>>(response, 'Failed to fetch products');
+}
+
+export async function getCategories(): Promise<Array<Category>> {
+  const response = await fetch(`${BASE_API_URL}/categories?norandom`, { next: { revalidate: 3600 } });
+  return handleResponse<Array<Category>>(response, 'Failed to fetch categories');
+}
+
+export async function getOrderById(orderId: number): Promise<Order> {
+  const response = await fetch(`${BASE_API_URL}/orders/${orderId}`);
+  return handleResponse<Order>(response, 'Failed to fetch order');
+}
+
+export async function createOrder(products: { id: number, quantity: number }[]): Promise<Order> {
   const response = await fetch(`${BASE_API_URL}/orders?norandom`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ products }),
   });
+  return handleResponse<Order>(response, 'Failed to create order');
+}
 
-  if (!response.ok) throw new Error('Failed to create order');
-  return await response.json();
-};
-
-export const updateOrder = async (orderId: number, productId: number, quantity: number) => {
+export async function updateOrder(orderId: number, productId: number, quantity: number): Promise<Order> {
   const response = await fetch(`${BASE_API_URL}/orders/${orderId}`, {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ action: 'update_quantity', productId, quantity }),
   });
+  return handleResponse<Order>(response, 'Failed to update order');
+}
 
-  if (!response.ok) {
-    const errorText = await response.text();
-    console.error('Server error response:', errorText);
-    throw new Error(`Failed to update order: ${errorText}`);
-  }
-
-  const responseBody = await response.text();
-
-  try {
-    return responseBody ? JSON.parse(responseBody) : {};
-  } catch (error) {
-    console.error('Failed to parse JSON response:', error);
-    throw new Error('Invalid JSON in server response');
-  }
-};
-
-export const completeOrder = async (orderId: number) => {
+export async function completeOrder(orderId: number): Promise<void> {
   const response = await fetch(`${BASE_API_URL}/orders/${orderId}/buy`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
   });
-
-  if (!response.ok) throw new Error('Failed to complete order');
-};
+  await handleResponse<void>(response, 'Failed to complete order');
+}
